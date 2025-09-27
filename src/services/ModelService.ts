@@ -74,12 +74,15 @@ export class ModelService {
 
       this.notifyProgress({ stage: 'initializing', progress: 75, message: 'Initializing model...' });
 
-      // Load the model from the buffer, providing the full path for external data
+      // Load the model from the buffer.
+      // We use `as any` on the session options because the library's TypeScript definitions
+      // are incorrect and don't include the `externalDataFilePaths` property, which is required
+      // for loading models with external weights from a URL.
       console.log('Creating inference session from buffer...');
-      this.session = await ort.InferenceSession.create(modelBuffer, {
+      this.session = await ort.InferenceSession.create(new Uint8Array(modelBuffer), {
         ...sessionOptions,
         externalDataFilePaths: [this.config.modelPath],
-      });
+      } as any);
 
       this.notifyProgress({ stage: 'initializing', progress: 90, message: 'Validating model...' });
 
