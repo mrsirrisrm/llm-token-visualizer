@@ -63,16 +63,25 @@ export class ModelService {
         enableMemPattern: true,
       };
 
-      this.notifyProgress({ stage: 'loading', progress: 50, message: 'Loading model into memory...' });
+      this.notifyProgress({ stage: 'loading', progress: 50, message: 'Fetching model data...' });
 
-      // Load the model directly with ONNX Runtime, providing the full path for external data
-      console.log('Loading model from:', this.config.modelPath);
-      this.session = await ort.InferenceSession.create(this.config.modelPath, {
+      // Fetch the model data first
+      const response = await fetch(this.config.modelPath);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch model: ${response.statusText}`);
+      }
+      const modelBuffer = await response.arrayBuffer();
+
+      this.notifyProgress({ stage: 'initializing', progress: 75, message: 'Initializing model...' });
+
+      // Load the model from the buffer, providing the full path for external data
+      console.log('Creating inference session from buffer...');
+      this.session = await ort.InferenceSession.create(modelBuffer, {
         ...sessionOptions,
         externalDataFilePaths: [this.config.modelPath],
       });
 
-      this.notifyProgress({ stage: 'initializing', progress: 90, message: 'Initializing model...' });
+      this.notifyProgress({ stage: 'initializing', progress: 90, message: 'Validating model...' });
 
       // Validate model inputs/outputs
       this.validateModel();
