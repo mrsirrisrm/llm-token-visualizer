@@ -65,9 +65,12 @@ export class ModelService {
 
       this.notifyProgress({ stage: 'loading', progress: 50, message: 'Loading model into memory...' });
 
-      // Load the model directly with ONNX Runtime
+      // Load the model directly with ONNX Runtime, providing the full path for external data
       console.log('Loading model from:', this.config.modelPath);
-      this.session = await ort.InferenceSession.create(this.config.modelPath, sessionOptions);
+      this.session = await ort.InferenceSession.create(this.config.modelPath, {
+        ...sessionOptions,
+        externalDataFilePaths: [this.config.modelPath],
+      });
 
       this.notifyProgress({ stage: 'initializing', progress: 90, message: 'Initializing model...' });
 
