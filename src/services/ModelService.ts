@@ -63,14 +63,53 @@ export class ModelService {
         enableMemPattern: true,
       };
 
-      this.notifyProgress({ stage: 'loading', progress: 50, message: 'Fetching model data...' });
+      this.notifyProgress({ stage: 'downloading', progress: 0, message: 'Checking cache for model...' });
 
-      // Fetch the model data first
-      const response = await fetch(this.config.modelPath);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch model: ${response.statusText}`);
+      const cacheName = 'model-cache-v1';
+      const cacheKey = this.config.modelPath;
+      const cache = await caches.open(cacheName);
+      let cachedResponse = await cache.match(cacheKey);
+      let modelBuffer: ArrayBuffer;
+
+      if (cachedResponse) {
+        this.notifyProgress({ stage: 'downloading', progress: 50, message: 'Loading model from cache...' });
+        modelBuffer = await cachedResponse.arrayBuffer();
+        this.notifyProgress({ stage: 'downloading', progress: 100, message: 'Model loaded from cache.' });
+      } else {
+        this.notifyProgress({ stage: 'downloading', progress: 0, message: 'Downloading model...' });
+
+        const response = await fetch(this.config.modelPath);
+        if (!response.ok || !response.body) {
+          throw new Error(`Failed to fetch model: ${response.statusText}`);
+        }
+
+        const contentLength = response.headers.get('Content-Length');
+        const totalSize = contentLength ? parseInt(contentLength, 10) : 0;
+        let receivedSize = 0;
+
+        const reader = response.body.getReader();
+        const chunks: Uint8Array[] = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          receivedSize += value.length;
+          if (totalSize > 0) {
+            const progress = (receivedSize / totalSize) * 100;
+            this.notifyProgress({ stage: 'downloading', progress, message: `Downloading model... ${Math.round(progress)}%` });
+          }
+        }
+
+        const blob = new Blob(chunks);
+        modelBuffer = await blob.arrayBuffer();
+
+        // Cache the downloaded model for future use
+        const cacheResponse = new Response(modelBuffer, {
+          headers: { 'Content-Type': 'application/octet-stream' }
+        });
+        await cache.put(cacheKey, cacheResponse);
+        this.notifyProgress({ stage: 'downloading', progress: 100, message: 'Model downloaded.' });
       }
-      const modelBuffer = await response.arrayBuffer();
 
       this.notifyProgress({ stage: 'initializing', progress: 75, message: 'Initializing model...' });
 
