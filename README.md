@@ -1,5 +1,7 @@
 # SmolLM2 Text Probability Visualizer
 
+Check out the [live demo](https://llm-token-visualizer.vercel.app/)
+
 **A web-based tool for analyzing and visualizing the predictability of text using a language model that runs entirely in your browser.**
 
 This application uses the SmolLM2-135M model to perform a token-by-token analysis of your input text, providing insights into how surprising or predictable each word is to the model. The results are displayed as color-coded text, offering an intuitive visual representation of the analysis.
