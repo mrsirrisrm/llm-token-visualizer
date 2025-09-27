@@ -1,197 +1,95 @@
 # SmolLM2 Text Probability Visualizer
 
-A web-based application that analyzes text predictability using the SmolLM2-135M model running locally in your browser via ONNX Runtime Web.
+**A web-based tool for analyzing and visualizing the predictability of text using a language model that runs entirely in your browser.**
+
+This application uses the SmolLM2-135M model to perform a token-by-token analysis of your input text, providing insights into how surprising or predictable each word is to the model. The results are displayed as color-coded text, offering an intuitive visual representation of the analysis.
+
+---
 
 ## Features
 
-- **Local Inference**: Runs the SmolLM2-135M model entirely in your browser using ONNX Runtime Web
-- **Text Analysis**: Analyzes token-by-token predictability of input text
-- **Visual Feedback**: Color-coded tokens showing prediction difficulty
-- **Statistics**: Comprehensive analysis including top-k accuracy, average rank, and cumulative probabilities
-- **Real-time Progress**: Live progress tracking during analysis
-- **Sample Texts**: Pre-loaded examples for quick testing
+-   **100% Client-Side**: The entire analysis, from tokenization to model inference, runs locally in your web browser. No data is ever sent to a server.
+-   **Interactive Visualization**: Text is colored based on its predictability, making it easy to spot surprising or unusual phrases.
+    -   <span style="color:green;">**Green**</span>: High predictability (the model easily guessed this token).
+    -   <span style="color:red;">**Red**</span>: Low predictability (a surprising token for the model).
+-   **Detailed Statistics**: Get a comprehensive breakdown of the analysis, including:
+    -   Top-K Accuracy (Top-1, Top-5, Top-10)
+    -   Average Token Rank
+    -   Average Cumulative Probability
+-   **Efficient Caching**: The model is downloaded once and then cached by your browser for near-instant loading on subsequent visits.
+-   **Real-Time Progress**: The UI shows live progress for model downloads and text analysis.
 
-## Architecture
+## How It Works
 
-This project ports the Python text probability analysis to a modern web application:
+The application performs a sophisticated analysis without needing a backend server. Here’s the process:
 
-### Core Components
+1.  **Model Loading**: On the first visit, the SmolLM2-135M model (in ONNX format) is downloaded from a public GCS bucket and cached in the browser.
+2.  **Tokenization**: The input text is broken down into tokens using the `@xenova/transformers` library.
+3.  **Sequential Inference**: The application iterates through the tokens one by one. For each token, it runs an inference using the preceding tokens as context to get the model's prediction for the *next* token.
+4.  **Analysis**: It calculates the rank and cumulative probability of the *actual* token within the model's predictions.
+5.  **Visualization**: This data is used to color the tokens and calculate the overall statistics.
 
-- **ModelService**: Handles ONNX model loading and inference
-- **TokenizerService**: Text tokenization using Transformers.js with fallback
-- **AnalysisEngine**: Core analysis logic ported from Python implementation
-- **React Frontend**: Modern UI with Tailwind CSS styling
+## Technology Stack
 
-### Technology Stack
+-   **Frontend**: React 18, TypeScript, Vite
+-   **Styling**: Tailwind CSS
+-   **ML Runtime**: ONNX Runtime Web (for running the model in the browser)
+-   **Tokenization**: `@xenova/transformers` (Transformers.js)
+-   **Model**: SmolLM2-135M in ONNX format
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **ML Runtime**: ONNX Runtime Web
-- **Tokenization**: @xenova/transformers (Transformers.js)
-- **Model**: SmolLM2-135M ONNX format
-
-## Setup Instructions
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Modern web browser with WebAssembly support
+-   Node.js v18+
+-   npm (or your preferred package manager)
+-   A modern web browser with WebAssembly support (Chrome, Firefox, Edge recommended).
 
 ### Installation
 
-1. **Clone and navigate to the project**:
-   ```bash
-   cd web-visualizer
-   ```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/llm-token-visualizer.git
+    cd llm-token-visualizer
+    ```
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-3. **Model Files**:
-   The required ONNX model files are already included in the `public/models/smollm2-135-onnx` directory. No download is necessary.
+3.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
 
-4. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
+4.  **Open your browser** to `http://localhost:5173`.
 
-5. **Open your browser** to `http://localhost:5173`
-
-## Usage
-
-1. **Wait for Model Loading**: The app will automatically download and load the model on first visit
-2. **Enter Text**: Type or paste text into the input area, or use one of the sample texts
-3. **Analyze**: Click "Analyze Text" to start the analysis
-4. **View Results**: 
-   - Tokens are color-coded by prediction difficulty
-   - Green: Easy to predict (low rank)
-   - Yellow: Moderately predictable
-   - Red: Hard to predict (high rank)
-   - Gray: Initial tokens (no prediction)
-
-## Model Information
-
-- **Model**: SmolLM2-135M (135 million parameters)
-- **Format**: ONNX for web deployment
-- **Vocabulary**: 49,152 tokens
-- **Context Length**: 2048 tokens
-- **Source**: Included in project (`/public/models/smollm2-135-onnx`)
-
-## Analysis Metrics
-
-The application provides several key metrics:
-
-- **Top-1 Accuracy**: Percentage of tokens where the model's top prediction was correct
-- **Top-5/Top-10 Accuracy**: Percentage where correct token was in top-5/10 predictions
-- **Average Rank**: Mean rank of actual tokens in model predictions
-- **Cumulative Probability**: Probability mass up to the actual token's rank
-
-## Performance Considerations
-
-- **First Load**: Model download (~270MB) happens once and is cached
-- **Inference Speed**: Depends on device capabilities (CPU/WebGL)
-- **Memory Usage**: ~500MB-1GB during inference
-- **Token Limit**: Analysis limited to 50 tokens for demo (configurable)
-
-## Browser Compatibility
-
-- **Chrome/Edge**: Full support with WebGL acceleration
-- **Firefox**: CPU-only inference
-- **Safari**: Limited support, CPU-only
-- **Mobile**: May have memory limitations
-
-## Development
-
-### Project Structure
-
-```
-web-visualizer/
-├── src/
-│   ├── components/         # React components
-│   │   ├── Analysis/
-│   │   ├── Layout/
-│   │   ├── TextInput/
-│   │   ├── ui/
-│   │   └── Visualization/
-│   ├── services/           # Core services (Model, Tokenizer, Analysis)
-│   ├── types/              # TypeScript type definitions
-│   ├── utils/              # Utility functions and constants
-│   ├── App.tsx             # Main application component
-│   └── main.tsx            # Application entry point
-├── public/
-│   ├── models/             # ONNX model files
-│   │   └── smollm2-135-onnx/
-│   └── examples/           # Sample text files
-└── package.json
-```
+The application will download the model on the first load, which may take a moment depending on your network connection.
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript checks
-
-### Adding New Features
-
-The codebase is designed for extensibility:
-
-- **New Visualizations**: Extend `VisualizationSettings` and color schemes
-- **Export Functionality**: Add export services for different formats
-- **Model Support**: Extend `ModelService` for other ONNX models
-- **Analysis Modes**: Add new analysis types to `AnalysisEngine`
-
-## Troubleshooting
-
-### Model Loading Issues
-
-- Ensure model files are in `public/models/smollm2-135-onnx/`
-- Check browser console for network errors
-- Verify file size (~270MB) downloaded correctly
-
-### Performance Issues
-
-- Try reducing analysis token limit in `handleAnalyze`
-- Close other browser tabs to free memory
-- Use Chrome/Edge for better WebGL support
-
-### Memory Errors
-
-- Refresh the page to clear memory
-- Reduce input text length
-- Check available system memory
+-   `npm run dev`: Starts the development server.
+-   `npm run build`: Builds the application for production.
+-   `npm run preview`: Serves the production build locally for testing.
+-   `npm run lint`: Runs ESLint to check for code quality issues.
+-   `npm run type-check`: Runs the TypeScript compiler to check for type errors.
 
 ## Contributing
 
-This project demonstrates the feasibility of running language model analysis entirely in the browser. Contributions welcome for:
+Contributions are welcome! This project is a great way to explore the capabilities of running language models in the browser. Potential areas for contribution include:
 
-- Performance optimizations
-- Additional visualization modes
-- Support for other models
-- Mobile optimization
-- Export functionality
+-   Performance optimizations
+-   Additional visualization modes
+-   Support for other models
+-   Mobile-friendly optimizations
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License.
 
 ## Acknowledgments
 
-- **SmolLM2**: HuggingFace team for the base model
-- **ONNX Runtime**: Microsoft for web runtime
-- **Transformers.js**: Xenova for tokenization library
-- **Original Python Implementation**: Base analysis algorithms
-
-
-# MODEL DIMS
-
-smollm-135
-135M param
-30 layers
-9 heads
-3 kv-head
-576 embedding dim
-1536 hidden dim
+-   The **HuggingFace team** for the base SmolLM2 model.
+-   **Microsoft** for the ONNX Runtime.
+-   **Xenova** for the `Transformers.js` library.
