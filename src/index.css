@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Custom styles for the text probability visualizer */
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.token-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.token-hover:hover {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.visualization-canvas {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1.6;
+}
+
+.color-legend {
+  background: linear-gradient(90deg, var(--color-start), var(--color-end));
+  height: 20px;
+  border-radius: 10px;
+}
