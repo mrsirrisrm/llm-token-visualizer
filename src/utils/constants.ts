@@ -1,6 +1,6 @@
 // Model configuration
 export const MODEL_CONFIG = {
-  DEFAULT_MODEL_PATH: '/models/smollm2-135-onnx/SmolLM2-135M-ONNX-fp16.onnx',
+  DEFAULT_MODEL_PATH: 'https://storage.googleapis.com/dbsea-public/models/SmolLM2-135M-ONNX-fp16.onnx',
   TOKENIZER_PATH: '/smollm2-135-onnx/',
   VOCAB_SIZE: 49152,
   MAX_SEQUENCE_LENGTH: 8192, // Updated to match SmolLM2's max_position_embeddings
